@@ -8,13 +8,18 @@ try {
 } catch (error) {
   throw new Error("cheerio 模块未找到,请先安装:npm install cheerio");
 }
+const fs = require("fs");
 
 // ==================== 配置区域 ====================
 // 网站地址(可以通过环境变量配置，支持多个域名用;分割) 
 const WEB_SITE_CONFIG = process.env.WEB_SITE_WOGG || "https://wogg.xxooo.cf;https://wogg.333232.xyz;https://www.wogg.net;https://wogg4k.333232.xyz;";
 const WEB_SITES = WEB_SITE_CONFIG.split(';').map(url => url.trim()).filter(url => url);
-// 筛选配置
-const FILTERS = process.env.FILTERS_WOGG || "https://gh-proxy.org/https://github.com/Silent1566/OmniBox-Spider/raw/refs/heads/main/%E9%85%8D%E7%BD%AE/%E7%AD%9B%E9%80%89/wogg.json";
+// 筛选配置：环境变量 -> 本地文件 -> 远程链接
+const FILTERS_PATH_REMOTE = "https://gh-proxy.org/https://github.com/Silent1566/OmniBox-Spider/raw/refs/heads/main/%E9%85%8D%E7%BD%AE/%E7%AD%9B%E9%80%89/wogg.json";
+const FILTERS_PATH_LOCAL = "/app/static/js/wogg.json";
+const FILTERS_WOGG = process.env.FILTERS_WOGG || (fs.existsSync(FILTERS_PATH_LOCAL)
+  ? fs.readFileSync(FILTERS_PATH_LOCAL, "utf-8")
+  : FILTERS_PATH_REMOTE);
 // 读取环境变量：支持多个网盘类型，用分号分割
 const DRIVE_TYPE_CONFIG = (process.env.DRIVE_TYPE_CONFIG || "quark;uc").split(';').map(t => t.trim()).filter(t => t);
 // 读取环境变量：线路名称和顺序，用分号分割
@@ -85,7 +90,7 @@ function getBaseUrl() {
  * 筛选配置
  */
 async function getDynamicFilters() {
-  const config = FILTERS;
+  const config = FILTERS_WOGG;
   const defaultFilters = {};
 
   if (config) {

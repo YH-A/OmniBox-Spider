@@ -2,7 +2,7 @@
 # @name 人人电影
 # @author 梦
 # @description 影视站：https://www.rrdynb.com/ ，支持首页、分类、搜索、详情与网盘线路提取（Python版）
-# @version 1.1.3
+# @version 1.1.4
 # @downloadURL https://gh-proxy.org/https://github.com/Silent1566/OmniBox-Spider/raw/refs/heads/main/影视/网盘/人人电影.py
 
 import json
@@ -93,6 +93,16 @@ def clean_multiline_html(text: str) -> str:
     value = re.sub(r"[ \t\r\f\v]+", " ", value)
     value = re.sub(r"\n\s*\n+", "\n", value)
     return value.strip()
+
+
+def normalize_vod_title(text: str) -> str:
+    value = str(text or "")
+    value = re.sub(r"</?font[^>]*>", "", value, flags=re.I)
+    value = clean_html(value)
+    value = re.split(r"(?:百度云|百度网盘|夸克|阿里云盘|阿里网盘|网盘下载|下载|中字)", value, maxsplit=1)[0].strip()
+    value = value.strip("《》[]【】()（） ")
+    value = re.sub(r"\s+", "", value)
+    return value or clean_html(text)
 
 
 def uniq(seq):
@@ -539,7 +549,7 @@ def extract_cards(text: str, type_id: str, type_name: str):
         href = abs_url(href_m.group(1)) if href_m else ""
         if not href:
             continue
-        title = clean_html(title_m.group(1) if title_m else "")
+        title = normalize_vod_title(title_m.group(1) if title_m else "")
         brief = clean_html(brief_m.group(1) if brief_m else "")
         date = clean_html(date_m.group(1) if date_m else "")
         remarks = " | ".join([x for x in [date, f"豆瓣{clean_html(douban_m.group(1))}" if douban_m else "", f"IMDB{clean_html(imdb_m.group(1))}" if imdb_m else ""] if x])
